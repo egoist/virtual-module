@@ -11,7 +11,7 @@ yarn add bundle-runner
 ## Usage
 
 ```js
-const { createBundleRunner } = require('bundle-runner')
+const { createBundleRunner } = require('@egoist/bundle-runner')
 
 const runner = createBundleRunner('entry.js', {
   'entry.js': `module.exports = context => context.a + context.b`

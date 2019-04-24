@@ -5,7 +5,7 @@
 ## Install
 
 ```bash
-yarn add bundle-runner
+yarn add @egoist/bundle-runner
 ```
 
 ## Usage

@@ -2,12 +2,13 @@ interface Files {
   [filename: string]: string
 }
 
-type Runner = (context: any) => any
+type BundleRunner = (context: any) => Promise<any>
 
-type CreateBundleRunner = (entryFile: string, files: Files, basedir: string, runInNewContext?: boolean | 'once') => Runner
+type CreateBundleRunner = (entryFile: string, files: Files, basedir: string, runInNewContext?: boolean | 'once') => BundleRunner
 
 declare let createBundleRunner: CreateBundleRunner
 
 export {
-  createBundleRunner
+  createBundleRunner,
+  BundleRunner
 }

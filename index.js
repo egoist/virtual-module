@@ -110,7 +110,7 @@ exports.createBundleRunner = function createBundleRunner(
     // module evaluation costs but requires the source code to be structured
     // slightly differently.
     let runner // lazy creation so that errors can be caught by user
-    return (userContext = {}) =>
+    return (...args) =>
       new Promise(resolve => {
         if (!runner) {
           const sandbox = runInNewContext === 'once' ? createSandbox() : global
@@ -126,7 +126,7 @@ exports.createBundleRunner = function createBundleRunner(
           }
         }
 
-        resolve(runner(userContext))
+        resolve(runner(...args))
       })
   }
 }

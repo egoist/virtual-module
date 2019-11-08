@@ -98,11 +98,11 @@ exports.createBundleRunner = function createBundleRunner(
     // new context mode: creates a fresh context and re-evaluate the bundle
     // on each render. Ensures entire application state is fresh for each
     // render, but incurs extra evaluation cost.
-    return (userContext = {}) =>
+    return (...args) =>
       new Promise(resolve => {
         userContext._registeredComponents = new Set()
-        const res = evaluate(entry, createSandbox(userContext))
-        resolve(typeof res === 'function' ? res(userContext) : res)
+        const res = evaluate(entry, createSandbox())
+        resolve(typeof res === 'function' ? res(...args) : res)
       })
   } else {
     // direct mode: instead of re-evaluating the whole bundle on

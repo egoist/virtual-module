@@ -100,7 +100,6 @@ exports.createBundleRunner = function createBundleRunner(
     // render, but incurs extra evaluation cost.
     return (...args) =>
       new Promise(resolve => {
-        userContext._registeredComponents = new Set()
         const res = evaluate(entry, createSandbox())
         resolve(typeof res === 'function' ? res(...args) : res)
       })

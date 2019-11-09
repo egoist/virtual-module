@@ -1,13 +1,16 @@
-const vm = require('vm')
-const path = require('path')
-const resolve = require('resolve')
-const NativeModule = require('module')
+import vm, { Script as VmScript } from 'vm'
+import path from 'path'
+import resolve from 'resolve'
+import NativeModule from 'module'
 
-const isPlainObject = obj =>
-  Object.prototype.toString.call(obj) === '[object Object]'
+export interface Files {
+  [filename: string]: string
+}
+
+export type RunInNewContext = boolean | 'once'
 
 function createSandbox() {
-  const sandbox = {
+  const sandbox: any = {
     Buffer,
     console,
     process,
@@ -22,11 +25,15 @@ function createSandbox() {
   return sandbox
 }
 
-function compileModule(files, basedir, runInNewContext) {
-  const compiledScripts = {}
-  const resolvedModules = {}
+function compileModule(
+  files: Files,
+  basedir?: string,
+  runInNewContext?: RunInNewContext
+) {
+  const compiledScripts: { [k: string]: VmScript } = {}
+  const resolvedModules: { [k: string]: string } = {}
 
-  function getCompiledScript(filename) {
+  function getCompiledScript(filename: string) {
     if (compiledScripts[filename]) {
       return compiledScripts[filename]
     }
@@ -40,7 +47,13 @@ function compileModule(files, basedir, runInNewContext) {
     return script
   }
 
-  function evaluateModule(filename, sandbox, evaluatedFiles = {}) {
+  type EvaluatedFile = (...args: any[]) => any
+
+  function evaluateModule(
+    filename: string,
+    sandbox: any,
+    evaluatedFiles: { [filename: string]: EvaluatedFile } = {}
+  ) {
     if (evaluatedFiles[filename]) {
       return evaluatedFiles[filename]
     }
@@ -50,9 +63,9 @@ function compileModule(files, basedir, runInNewContext) {
       runInNewContext === false
         ? script.runInThisContext()
         : script.runInNewContext(sandbox)
-    const m = { exports: {} }
-    const r = file => {
-      file = path.posix.join('.', file)
+    const m: { exports: any; default?: any } = { exports: {} }
+    const r = (file: string) => {
+      file = path.posix.join('.', file).replace(/(\.js)?$/, '.js') // Ensure it ends with .js
       if (files[file]) {
         return evaluateModule(file, sandbox, evaluatedFiles)
       } else if (basedir) {
@@ -73,32 +86,24 @@ function compileModule(files, basedir, runInNewContext) {
   return evaluateModule
 }
 
-function deepClone(val) {
-  if (isPlainObject(val)) {
-    const res = {}
-    for (const key in val) {
-      res[key] = deepClone(val[key])
-    }
-    return res
-  } else if (Array.isArray(val)) {
-    return val.slice()
-  } else {
-    return val
-  }
-}
+/**
+ * Execute the entry file in the bundle
+ * `args` are passed to underlying entry file
+ */
+export type BundlerRunner = (...args: any[]) => Promise<any>
 
-exports.createBundleRunner = function createBundleRunner(
-  entry,
-  files,
-  basedir,
-  runInNewContext
-) {
+export function createBundleRunner(
+  entry: string,
+  files: Files,
+  basedir?: string,
+  runInNewContext?: RunInNewContext
+): BundlerRunner {
   const evaluate = compileModule(files, basedir, runInNewContext)
   if (runInNewContext !== false && runInNewContext !== 'once') {
     // new context mode: creates a fresh context and re-evaluate the bundle
     // on each render. Ensures entire application state is fresh for each
     // render, but incurs extra evaluation cost.
-    return (...args) =>
+    return (...args: any[]) =>
       new Promise(resolve => {
         const res = evaluate(entry, createSandbox())
         resolve(typeof res === 'function' ? res(...args) : res)
@@ -108,8 +113,8 @@ exports.createBundleRunner = function createBundleRunner(
     // each render, it simply calls the exported function. This avoids the
     // module evaluation costs but requires the source code to be structured
     // slightly differently.
-    let runner // lazy creation so that errors can be caught by user
-    return (...args) =>
+    let runner: BundlerRunner // lazy creation so that errors can be caught by user
+    return (...args: any[]) =>
       new Promise(resolve => {
         if (!runner) {
           const sandbox = runInNewContext === 'once' ? createSandbox() : global

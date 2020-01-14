@@ -83,12 +83,14 @@ export type EvaluateModule = <
   file: TFile
 ) => TModuleExports
 
+export interface Options {
+  baseDir?: string
+  sandbox?: boolean | typeof createSandbox
+}
+
 export function createModule(
   files: Files,
-  options: {
-    baseDir?: string
-    sandbox?: boolean | typeof createSandbox
-  } = {}
+  options: Options = {}
 ): EvaluateModule {
   const { sandbox = true, baseDir } = options
   const evaluate = compileModule(files, Boolean(sandbox), baseDir)

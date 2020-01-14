@@ -1,6 +1,6 @@
 # virtual-module
 
-[![NPM version](https://badgen.net/npm/v/virtual-module)](https://npmjs.com/package/virtual-module) [![NPM downloads](https://badgen.net/npm/dm/virtual-module)](https://npmjs.com/package/virtual-module) [![CircleCI](https://badgen.net/circleci/github/egoist/virtual-module/master)](https://circleci.com/gh/egoist/virtual-module/tree/master) [![donate](https://badgen.net/badge/support%20me/donate/ff69b4)](https://patreon.com/egoist) [![chat](https://badgen.net/badge/chat%20on/discord/7289DA)](https://chat.egoist.moe)
+[![NPM version](https://badgen.net/npm/v/virtual-module)](https://npmjs.com/package/virtual-module) [![NPM downloads](https://badgen.net/npm/dm/virtual-module)](https://npmjs.com/package/virtual-module) [![CircleCI](https://badgen.net/circleci/github/egoist/virtual-module/master)](https://circleci.com/gh/egoist/virtual-module/tree/master) [![chat](https://badgen.net/badge/chat%20on/discord/7289DA)](https://chat.egoist.sh)
 
 **Evaluate a module in sandbox.** This package is extracted and modified from vue-server-renderer.
 

@@ -1,5 +1,5 @@
 {
-  "name": "@egoist/bundle-runner",
+  "name": "virtual-module",
   "version": "0.1.2",
   "publishConfig": {
     "access": "public"
@@ -11,29 +11,27 @@
     "dist"
   ],
   "scripts": {
-    "test": "jest",
+    "test": "ts-node test/index.test.ts",
     "build": "tsc",
     "prepublishOnly": "yarn build",
-    "typedoc": "typedoc --out public --mode file --theme minimal"
+    "typedoc": "typedoc --out public --mode file --theme minimal --excludeNotExported --excludeExternals --excludePrivate --excludeProtected"
   },
   "repository": {
-    "url": "egoist/bundle-runner",
+    "url": "egoist/virtual-module",
     "type": "git"
   },
   "author": "egoist<0x142857@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "resolve": "^1.10.1"
+    "resolve": "^1.14.2"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.22",
     "@types/node": "^12.12.7",
     "@types/resolve": "^0.0.8",
     "husky": "^1.0.0-rc.13",
-    "jest": "^24.9.0",
     "lint-staged": "^7.2.0",
     "prettier": "^1.15.2",
-    "ts-jest": "^24.1.0",
+    "ts-node": "^8.6.2",
     "typedoc": "^0.15.0",
     "typescript": "^3.7.2"
   },

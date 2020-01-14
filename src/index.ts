@@ -7,10 +7,8 @@ export interface Files {
   [filename: string]: string
 }
 
-export type RunInNewContext = boolean | 'once'
-
 function createSandbox() {
-  const sandbox: any = {
+  const sandbox: { [k: string]: any } = {
     Buffer,
     console,
     process,
@@ -25,11 +23,7 @@ function createSandbox() {
   return sandbox
 }
 
-function compileModule(
-  files: Files,
-  basedir?: string,
-  runInNewContext?: RunInNewContext
-) {
+function compileModule(files: Files, sandbox: boolean, baseDir?: string) {
   const compiledScripts: { [k: string]: VmScript } = {}
   const resolvedModules: { [k: string]: string } = {}
 
@@ -51,7 +45,7 @@ function compileModule(
 
   function evaluateModule(
     filename: string,
-    sandbox: any,
+    sandbox: ReturnType<typeof createSandbox>,
     evaluatedFiles: { [filename: string]: EvaluatedFile } = {}
   ) {
     if (evaluatedFiles[filename]) {
@@ -59,78 +53,52 @@ function compileModule(
     }
 
     const script = getCompiledScript(filename)
-    const compiledWrapper =
-      runInNewContext === false
-        ? script.runInThisContext()
-        : script.runInNewContext(sandbox)
-    const m: { exports: any; default?: any } = { exports: {} }
+    const compiledWrapper = sandbox
+      ? script.runInNewContext(sandbox)
+      : script.runInThisContext()
+    const m: { exports: any } = { exports: {} }
     const r = (file: string) => {
       file = path.posix.join('.', file).replace(/(\.js)?$/, '.js') // Ensure it ends with .js
       if (files[file]) {
         return evaluateModule(file, sandbox, evaluatedFiles)
-      } else if (basedir) {
+      } else if (baseDir) {
         return require(resolvedModules[file] ||
-          (resolvedModules[file] = resolve.sync(file, { basedir })))
+          (resolvedModules[file] = resolve.sync(file, { basedir: baseDir })))
       } else {
         return require(file)
       }
     }
     compiledWrapper.call(m.exports, m.exports, r, m)
 
-    const res = Object.prototype.hasOwnProperty.call(m.exports, 'default')
-      ? m.exports.default
-      : m.exports
-    evaluatedFiles[filename] = res
-    return res
+    evaluatedFiles[filename] = m.exports
+    return m.exports
   }
   return evaluateModule
 }
 
-/**
- * Execute the entry file in the bundle
- * `args` are passed to underlying entry file
- */
-export type BundlerRunner = (...args: any[]) => Promise<any>
+export type EvaluateModule = <
+  TModuleExports extends any = any,
+  TFile extends string = string
+>(
+  file: TFile
+) => TModuleExports
 
-export function createBundleRunner(
-  entry: string,
+export function createModule(
   files: Files,
-  basedir?: string,
-  runInNewContext?: RunInNewContext
-): BundlerRunner {
-  const evaluate = compileModule(files, basedir, runInNewContext)
-  if (runInNewContext !== false && runInNewContext !== 'once') {
-    // new context mode: creates a fresh context and re-evaluate the bundle
-    // on each render. Ensures entire application state is fresh for each
-    // render, but incurs extra evaluation cost.
-    return (...args: any[]) =>
-      new Promise(resolve => {
-        const res = evaluate(entry, createSandbox())
-        resolve(typeof res === 'function' ? res(...args) : res)
-      })
-  } else {
-    // direct mode: instead of re-evaluating the whole bundle on
-    // each render, it simply calls the exported function. This avoids the
-    // module evaluation costs but requires the source code to be structured
-    // slightly differently.
-    let runner: BundlerRunner // lazy creation so that errors can be caught by user
-    return (...args: any[]) =>
-      new Promise(resolve => {
-        if (!runner) {
-          const sandbox = runInNewContext === 'once' ? createSandbox() : global
-          // the initial context is only used for collecting possible non-component
-          // styles injected by vue-style-loader.
-          runner = evaluate(entry, sandbox)
-
-          if (typeof runner !== 'function') {
-            throw new Error(
-              'bundle export should be a function when using ' +
-                '{ runInNewContext: false }.'
-            )
-          }
-        }
-
-        resolve(runner(...args))
-      })
-  }
+  options: {
+    baseDir?: string
+    sandbox?: boolean | typeof createSandbox
+  } = {}
+): EvaluateModule {
+  const { sandbox = true, baseDir } = options
+  const evaluate = compileModule(files, Boolean(sandbox), baseDir)
+  return file =>
+    evaluate(
+      file,
+      sandbox
+        ? typeof sandbox === 'function'
+          ? sandbox()
+          : createSandbox()
+        : global
+    )
 }

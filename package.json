@@ -12,7 +12,8 @@
   ],
   "scripts": {
     "test": "ts-node test/index.test.ts",
-    "build": "tsc",
+    "prebuild": "rm -rf dist",
+    "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "yarn build",
     "typedoc": "typedoc --out public --mode file --theme minimal --excludeNotExported --excludeExternals --excludePrivate --excludeProtected"
   },

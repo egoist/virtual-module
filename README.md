@@ -17,7 +17,7 @@ const { createModule } = require('virtual-module')
 
 const evaluate = createModule({
   'entry.js': `
-    const isThree = require('./is-three')
+    const isThree = require('is-three.js')
     module.exports = context => isThree(context.a + context.b)
   `,
   'is-three.js': `

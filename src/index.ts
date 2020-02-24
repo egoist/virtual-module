@@ -58,7 +58,7 @@ function compileModule(files: Files, sandbox: boolean, baseDir?: string) {
       : script.runInThisContext()
     const m: { exports: any } = { exports: {} }
     const r = (file: string) => {
-      file = path.posix.join('.', file).replace(/(\.js)?$/, '.js') // Ensure it ends with .js
+      file = path.posix.join('.', file)
       if (files[file]) {
         return evaluateModule(file, sandbox, evaluatedFiles)
       } else if (baseDir) {
